@@ -1,0 +1,6 @@
+- name: test playbook
+  hosts: prod
+  tasks:
+    - name: print msg test 
+      debug:
+        msg: "Testing"

@@ -18,9 +18,9 @@
         msg: "Apache service alreay exists"
       when: "'httpd.service' in ansible_facts.services"
 
-    - name: Stopping play if service exists
-      ansible.builtin.meta: end_play
-      when: "'httpd.service' in ansible_facts.services"
+    #- name: Stopping play if service exists
+    #  ansible.builtin.meta: end_play
+    #  when: "'httpd.service' in ansible_facts.services"
 
     - name: Deploying apache service if doesnt exists on server
       ansible.builtin.package:
@@ -28,9 +28,55 @@
         state: present
       when: "'httpd.service' not in ansible_facts.services"
 
-    - name: start and enable service
+    - name: Start and enable service
       ansible.builtin.service: 
         name: httpd 
         state: started
         enabled: true
+      register: deployed_status
       when:  "'httpd.service' not in ansible_facts.services" 
+
+    - name: Setting fact for apache deployement if already available
+      ansible.builtin.set_fact:
+        deployment_status: "Already_Deployed"
+      when: "'httpd.service' in ansible_facts.services"
+
+    - name: Setting fact for apache deployement status if deployed newely
+      ansible.builtin.set_fact:
+        deployment_status: "Successfully_Deployed"
+      when: 
+        - "'httpd.service' not in ansible_facts.services"
+        - deployed_status is succeeded
+
+    - name: Set status if failed
+      set_fact:
+        deployment_status: "Failed"
+      when:
+        - "'httpd.service' not in ansible_facts.services"
+        - deployed_status is failed
+
+    - name: debug
+      debug:
+        msg: "{{ deployment_status }}"
+
+#    - name: Generating report using jinja templates
+#      ansible.builtin.template:
+#        src: ../templates/apache.j2
+#        dest: /home/aniket/ansibl-project/jinja-files/apache.html
+#        owner: root
+#        group: root
+#        mode: '0644'
+
+    - name: Sending apache deployement status mail
+      become: false
+      community.general.mail:
+        host: smtp.gmail.com
+        port: 587
+        username: enquiry.aniket23@gmail.com
+        password: "lisi wpum dqdm cfbx"
+        secure: starttls
+        to: aniketkorde780@gmail.com
+        subject: "Apache deployement status"
+        subtype: html
+        body: "{{ lookup('template', '../templates/apache.j2') }}"
+      delegate_to: localhost

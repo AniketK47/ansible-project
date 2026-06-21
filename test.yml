@@ -1,6 +1,17 @@
 - name: test playbook
-  hosts: prod
+  hosts: localhost
   tasks:
     - name: print msg test 
       debug:
         msg: "Testing"
+
+    - name: Sending apache deployement status mail
+      community.general.mail:
+        host: smtp.gmail.com
+        port: 587
+        username: enquiry.aniket23@gmail.com
+        password: "lisi wpum dqdm cfbx"
+        secure: starttls
+        to: aniketkorde780@gmail.com
+        subject: Test-mail
+        body: hello from ansible

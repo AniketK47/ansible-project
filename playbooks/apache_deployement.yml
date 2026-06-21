@@ -1,5 +1,5 @@
 ---
-- name: Playbook for deploying apache on dev server
+- name: Playbook for deploying apache on prod server
   hosts: prod
   become: true
   gather_facts: true

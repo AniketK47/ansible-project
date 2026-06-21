@@ -1,0 +1,36 @@
+---
+- name: Playbook for deploying apache on dev server
+  hosts: prod
+  become: true
+  gather_facts: true
+
+  tasks: 
+    - name: Populate serive facts
+      ansible.builtin.service_facts:
+      register: service_facts
+
+    - name: debug service
+      ansible.builtin.debug: 
+        msg: "{{service_facts}}"
+
+    - name: check apache service exists or not
+      ansible.builtin.debug:
+        msg: "Apache service alreay exists"
+      when: "'httpd.service' in ansible_facts.services"
+
+    - name: Stopping play if service exists
+      ansible.builtin.meta: end_play
+      when: "'httpd.service' in ansible_facts.services"
+
+    - name: Deploying apache service if doesnt exists on server
+      ansible.builtin.package:
+        name: httpd
+        state: present
+      when: "'httpd.service' not in ansible_facts.services"
+
+    - name: start and enable service
+      ansible.builtin.service: 
+        name: httpd 
+        state: started
+        enabled: true
+      when:  "'httpd.service' not in ansible_facts.services" 
